@@ -206,13 +206,12 @@ async def talk(ctx: discord.ApplicationContext, user_text: str):
     ]
     # ユーザーの発言を追加
     messages.append({"role": "user", "content": user_text})
-    response = openai.ChatCompletion.create(
+    response = await openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=messages,
     )
     print(response["choices"][0]["message"]["content"])
-    await ctx.respond('```\n' + user_text + '\n```')
-    await ctx.respond(response["choices"][0]["message"]["content"])
+    await ctx.respond('```\n' + ctx.author.display_name + ':' + user_text + '\n```' + response["choices"][0]["message"]["content"])
 
 
 @bot.command(name="show_point", description="ポイントを表示します")
