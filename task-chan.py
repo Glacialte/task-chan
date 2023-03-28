@@ -117,17 +117,16 @@ async def on_message(message: discord.Message):
 
     taskchan.users[message.author].add_message(message.content)
 
-    # メッセージに挨拶を含む場合、挨拶を返す
-    if 'こんにちは' in message.content or 'こんばんは' in message.content or 'おはよう' in message.content or 'hello' in message.content or 'Hello' in message.content or 'hi' in message.content or 'Hi' in message.content:
-        await message.reply("こんにちは!" + taskchan.users[message.author].name + "さん！")
-
     # メッセージが!talkで始まる場合、対話する
+    user_text = ''
     if message.content.startswith("!talk"):
         user_text = message.content.replace("!talk", "")
     with open('./character_settings.txt', 'r') as f:
         TaskChan.character_settings = f.read()
     messages = [
-        {"role": "system", "content": TaskChan.character_settings}
+        {"role": "system", "content": TaskChan.character_settings},
+        {"role": "user", "content": 'こんにちは！'},
+        {"role": "assistant", "content": 'こんにちは！わたしはタスクちゃんだよ！'},
     ]
     # ユーザーの発言を追加
     messages.append({"role": "user", "content": user_text})
