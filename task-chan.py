@@ -206,14 +206,25 @@ async def talk(ctx: discord.ApplicationContext, user_text: str):
     ]
     # ユーザーの発言を追加
     messages.append({"role": "user", "content": user_text})
-    response = await openai.ChatCompletion.create(
+    response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=messages,
     )
     print(response["choices"][0]["message"]["content"])
+    await ctx.respond('```\n' + ctx.author.display_name + ':' + user_text + '\n```' + response["choices"][0]["message"]["content"])
 
-    await ctx.respond(response["choices"][0]["message"]["content"])
 
+@bot.command(name="show_point", description="ポイントを表示します")
+async def show_point(ctx: discord.ApplicationContext):
+    # 新しいサーバーの場合、task-chanをインスタンス化
+    if ctx.guild not in TaskChan.server_taskchan:
+        TaskChan.server_taskchan[ctx.guild] = TaskChan()
+    # ユーザーがtask-chanのユーザーでない場合、ユーザーを追加
+    if ctx.author not in TaskChan.server_taskchan[ctx.guild].users:
+        TaskChan.server_taskchan[ctx.guild].users[ctx.author] = User(
+            ctx.author.display_name)
+    user = TaskChan.server_taskchan[ctx.guild].users[ctx.author]
+    await ctx.respond(f"{user.name}さんのポイントは{user.point}だよ！")
 
 # Botを起動
 bot.run(TASKCHAN_TOKEN)
