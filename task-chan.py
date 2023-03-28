@@ -84,6 +84,7 @@ class User():
 
 class TaskChan():
     server_taskchan: dict[discord.Guild, "TaskChan"] = {}
+    character_settings = ''
     # サーバーとtask-chanのインスタンスを紐付けるための辞書
 
     def __init__(self):
@@ -119,6 +120,23 @@ async def on_message(message: discord.Message):
     # メッセージに挨拶を含む場合、挨拶を返す
     if 'こんにちは' in message.content or 'こんばんは' in message.content or 'おはよう' in message.content or 'hello' in message.content or 'Hello' in message.content or 'hi' in message.content or 'Hi' in message.content:
         await message.reply("こんにちは!" + taskchan.users[message.author].name + "さん！")
+
+    # メッセージが!talkで始まる場合、対話する
+    if message.content.startswith("!talk"):
+        user_text = message.content.replace("!talk", "")
+    with open('./character_settings.txt', 'r') as f:
+        TaskChan.character_settings = f.read()
+    messages = [
+        {"role": "system", "content": TaskChan.character_settings}
+    ]
+    # ユーザーの発言を追加
+    messages.append({"role": "user", "content": user_text})
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=messages,
+    )
+    print(response["choices"][0]["message"]["content"])
+    await message.channel.send(response["choices"][0]["message"]["content"])
 
 
 @bot.command(name="save", description="データを保存します")
@@ -184,34 +202,6 @@ async def show_tasks(ctx: discord.ApplicationContext):
         for task in tasks:
             message += f"・{task.name} 締め切り:{task.due.strftime('%Y/%m/%d %H:%M')} 報酬:{task.reward}ポイント\n"
             await ctx.respond(message)
-
-
-# OpenAIを用いた対話コマンド
-@bot.command(name="talk", description="タスクちゃんとお話します")
-async def talk(ctx: discord.ApplicationContext, user_text: str):
-    # 新しいサーバーの場合、task-chanをインスタンス化
-    if ctx.guild not in TaskChan.server_taskchan:
-        TaskChan.server_taskchan[ctx.guild] = TaskChan()
-    # ユーザーがtask-chanのユーザーでない場合、ユーザーを追加
-    if ctx.author not in TaskChan.server_taskchan[ctx.guild].users:
-        TaskChan.server_taskchan[ctx.guild].users[ctx.author] = User(
-            ctx.author.display_name)
-    user = TaskChan.server_taskchan[ctx.guild].users[ctx.author]
-    # 対話を開始
-    character_settings = ""
-    with open('./character_settings.txt', 'r') as f:
-        character_settings = f.read()
-    messages = [
-        {"role": "system", "content": character_settings}
-    ]
-    # ユーザーの発言を追加
-    messages.append({"role": "user", "content": user_text})
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=messages,
-    )
-    print(response["choices"][0]["message"]["content"])
-    await ctx.respond('```\n' + ctx.author.display_name + ':' + user_text + '\n```' + response["choices"][0]["message"]["content"])
 
 
 @bot.command(name="show_point", description="ポイントを表示します")
