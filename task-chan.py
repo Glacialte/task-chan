@@ -187,8 +187,8 @@ async def show_tasks(ctx: discord.ApplicationContext):
 
 
 # OpenAIを用いた対話コマンド
-@bot.command(name="talk", description="タスクちゃんとお話します")
-async def talk(ctx: discord.ApplicationContext, user_text: str):
+@bot.command(name="talkto", description="タスクちゃんとお話します")
+async def talkto(ctx: discord.ApplicationContext, user_text: str):
     # 新しいサーバーの場合、task-chanをインスタンス化
     if ctx.guild not in TaskChan.server_taskchan:
         TaskChan.server_taskchan[ctx.guild] = TaskChan()
