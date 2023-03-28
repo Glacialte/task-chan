@@ -206,7 +206,7 @@ async def talk(ctx: discord.ApplicationContext, user_text: str):
     ]
     # ユーザーの発言を追加
     messages.append({"role": "user", "content": user_text})
-    response = openai.ChatCompletion.create(
+    response = await openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=messages,
     )
