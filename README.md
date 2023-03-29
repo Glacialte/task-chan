@@ -30,6 +30,4 @@ Talk with Task-chan!
 ```
 
 ## Points to be fixed
-- There are some bugs in "save" and "load"
-  - pickle error
 - Reminder function isn't implemented (what is a reminder bot?🤔)
