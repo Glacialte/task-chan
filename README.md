@@ -3,28 +3,31 @@
 Task-chan is a discord reminder bot which can talk with!
 It use gpt-3.5-turbo and we can have a brief chat!
 
-## commands
-### add-task
+## Functions
+### /add-task
 Add your task to task-list.
 ```
 /add-task due  description  y/m/d h:d  point
 ```
 We can set a "point" and it will increase the task-chan's likeability.
 
-### show-tasks
+### /show-tasks
 Show all of your tasks.
 
-### talk
-Talk with task-chan!
-```
-/talk text
-```
+### /show_point
+Show your point which you have earned so far.
 
-### save
+### /save
 Save all tasks so as not to lose them.
 
-### load
+### /load
 Load task-list and user-list. That's enables this bot to recall tasks after rebooting.
+
+### !talk
+Talk with Task-chan!
+```
+!talk Hello! Nice to meet you!
+```
 
 ## Points to be fixed
 - There are some bugs in "save" and "load"
