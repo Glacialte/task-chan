@@ -3,6 +3,7 @@ import openai
 import datetime
 import pickle
 import os
+import asyncio
 from discord.ext import tasks
 
 # アクセストークンを設定
@@ -70,12 +71,18 @@ class User():
         self.point: int = 0
         self.tasks: list[Task] = []
 
-    def complete_task(self, task: Task) -> None:
-        self.point += task.reward
-        self.tasks.remove(task)
+    def complete_task(self, taskname: str) -> None:
+        for task in self.tasks:
+            if task.name == taskname:
+                self.point += task.reward
+                self.tasks.remove(task)
+                return
     
-    def remove_task(self, task: Task) -> None:
-        self.tasks.remove(task)
+    def remove_task(self, taskname: str) -> None:
+        for task in self.tasks:
+            if task.name == taskname:
+                self.tasks.remove(task)
+                return
 
     def add_task(self, task: Task) -> None:
         self.tasks.append(task)
@@ -109,7 +116,7 @@ async def time_check():
                     await server.create_text_channel("task-chan")
                 channel = discord.utils.get(server.text_channels, name="task-chan")
                 if datetime.datetime.now() > task.due:
-                    TaskChan.server_taskchan[server].users[user].remove_task(task)
+                    TaskChan.server_taskchan[server].users[user].remove_task(task.name)
                     await channel.send(f"{user.mention} {task.name}の期限が過ぎてるよ！リストから消しておくね！")
                 # 期限の30分前に通知
                 elif datetime.datetime.now() > task.due - datetime.timedelta(minutes=30) and datetime.datetime.now() < task.due - datetime.timedelta(minutes=29):
@@ -123,6 +130,7 @@ async def time_check():
                 # 期限の三日前に通知
                 elif datetime.datetime.now() > task.due - datetime.timedelta(days=3) and datetime.datetime.now() < task.due - datetime.timedelta(days=2, hours=23, minutes=59):
                     await channel.send(f"{user.mention} {task.name}の期限は三日後だよ！")
+                await asyncio.sleep(30)
                 
 
 # Botが見える場所でメッセージが投稿された時に動くメソッド
@@ -283,5 +291,8 @@ async def show_point(ctx: discord.ApplicationContext):
     user = TaskChan.server_taskchan[ctx.guild].users[ctx.author]
     await ctx.respond(f"{user.name}さんのポイントは{user.point}だよ！")
 
+
+# time_check起動
+time_check.start()
 # Botを起動
 bot.run(TASKCHAN_TOKEN)
