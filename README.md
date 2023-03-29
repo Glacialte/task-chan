@@ -1,4 +1,4 @@
-# task-chan
+# Task-chan
 ## What's this?
 Task-chan is a discord reminder bot which can talk with!
 It use gpt-3.5-turbo and we can have a brief chat!
