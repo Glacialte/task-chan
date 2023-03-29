@@ -11,6 +11,12 @@ Add your task to task-list.
 ```
 We can set a "point" and it will increase the task-chan's likeability.
 
+### /complete_task
+Complete your task! You will earn some point!
+
+### /delete_task
+Delete your task from task-list.
+
 ### /show-tasks
 Show all of your tasks.
 
@@ -29,5 +35,3 @@ Talk with Task-chan!
 !talk Hello! Nice to meet you!
 ```
 
-## Points to be fixed
-- Reminder function isn't implemented (what is a reminder bot?🤔)
