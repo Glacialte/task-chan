@@ -29,5 +29,4 @@ Load task-list and user-list. That's enables this bot to recall tasks after rebo
 ## Points to be fixed
 - There are some bugs in "save" and "load"
   - pickle error
-- "talk" currently supports only short comments
 - Reminder function isn't implemented (what is a reminder bot?🤔)
