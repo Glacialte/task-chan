@@ -3,6 +3,7 @@ import openai
 import datetime
 import pickle
 import os
+from discord.ext import tasks
 
 # アクセストークンを設定
 TASKCHAN_TOKEN = os.environ.get("TASKCHAN_TOKEN")
@@ -13,7 +14,6 @@ bot: discord.Bot = discord.Bot(
     intents=discord.Intents.all(),  # 全てのインテンツを利用できるようにする
     activity=discord.Game("Reminder Bot with openai"),  # "〇〇をプレイ中"の"〇〇"を設定,
 )
-
 
 class Task():
     """
@@ -73,6 +73,9 @@ class User():
     def complete_task(self, task: Task) -> None:
         self.point += task.reward
         self.tasks.remove(task)
+    
+    def remove_task(self, task: Task) -> None:
+        self.tasks.remove(task)
 
     def add_task(self, task: Task) -> None:
         self.tasks.append(task)
@@ -95,6 +98,32 @@ class TaskChan():
 async def on_ready():
     print("Hello! Task-chan starts working!")
 
+
+@tasks.loop(seconds=30)
+async def time_check():
+    for server in TaskChan.server_taskchan:
+        for user in TaskChan.server_taskchan[server].users:
+            for task in TaskChan.server_taskchan[server].users[user].tasks:
+                is_exist_channel = discord.utils.get(server.text_channels, name="task-chan")
+                if not is_exist_channel:
+                    await server.create_text_channel("task-chan")
+                channel = discord.utils.get(server.text_channels, name="task-chan")
+                if datetime.datetime.now() > task.due:
+                    TaskChan.server_taskchan[server].users[user].remove_task(task)
+                    await channel.send(f"{user.mention} {task.name}の期限が過ぎてるよ！リストから消しておくね！")
+                # 期限の30分前に通知
+                elif datetime.datetime.now() > task.due - datetime.timedelta(minutes=30) and datetime.datetime.now() < task.due - datetime.timedelta(minutes=29):
+                    await channel.send(f"{user.mention} {task.name}の期限は30分後だよ！")
+                # 期限の3時間前に通知
+                elif datetime.datetime.now() > task.due - datetime.timedelta(hours=3) and datetime.datetime.now() < task.due - datetime.timedelta(hours=2, minutes=59):
+                    await channel.send(f"{user.mention} {task.name}の期限は3時間後だよ！")
+                # 期限の前日に通知
+                elif datetime.datetime.now() > task.due - datetime.timedelta(days=1) and datetime.datetime.now() < task.due - datetime.timedelta(days=0, hours=23, minutes=59):
+                    await channel.send(f"{user.mention} {task.name}の期限は明日だよ！")
+                # 期限の三日前に通知
+                elif datetime.datetime.now() > task.due - datetime.timedelta(days=3) and datetime.datetime.now() < task.due - datetime.timedelta(days=2, hours=23, minutes=59):
+                    await channel.send(f"{user.mention} {task.name}の期限は三日後だよ！")
+                
 
 # Botが見える場所でメッセージが投稿された時に動くメソッド
 @bot.event
@@ -199,6 +228,26 @@ async def add_task(ctx: discord.ApplicationContext, name: str, description: str,
     TaskChan.server_taskchan[ctx.guild].users[ctx.author] = user
     await ctx.respond(f"「{name}」を追加したよ！締め切りは{due.strftime('%Y/%m/%d %H:%M')}、報酬は{reward}ポイント\n頑張ってね！")
 
+
+@bot.command(name="delete_task", description="タスクを削除します")
+async def delete_task(ctx: discord.ApplicationContext, name: str):
+    # 新しいサーバーの場合、task-chanをインスタンス化
+    if ctx.guild not in TaskChan.server_taskchan or ctx.author not in TaskChan.server_taskchan[ctx.guild].users:
+        await ctx.respond("タスクはないみたい")
+        return
+    user = TaskChan.server_taskchan[ctx.guild].users[ctx.author]
+    user.delete_task(name)
+    await ctx.respond(f"「{name}」を削除したよ！")
+
+@bot.command(name="complete_task", description="タスクを完了します")
+async def complete_task(ctx: discord.ApplicationContext, name: str):
+    # 新しいサーバーの場合return
+    if ctx.guild not in TaskChan.server_taskchan or ctx.author not in TaskChan.server_taskchan[ctx.guild].users:
+        await ctx.respond("タスクはないみたい")
+        return
+    user = TaskChan.server_taskchan[ctx.guild].users[ctx.author]
+    user.complete_task(name)
+    await ctx.respond(f"「{name}」を完了したよ！")
 
 @bot.command(name="show_tasks", description="タスク一覧を表示します")
 async def show_tasks(ctx: discord.ApplicationContext):
